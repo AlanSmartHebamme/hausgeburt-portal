@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme (Default) */
+  --background-start-rgb: 248, 250, 252; /* slate-50 */
+  --background-end-rgb: 255, 255, 255;   /* white */
+  --foreground-rgb: 15, 23, 42;        /* slate-900 */
+  --muted-foreground-rgb: 71, 85, 105; /* slate-500 */
+  
+  --card-rgb: 255, 255, 255;           /* white */
+  --card-border-rgb: 226, 232, 240;    /* slate-200 */
+  
+  --primary-rgb: 59, 130, 246;         /* blue-500 */
+  --primary-foreground-rgb: 248, 250, 252; /* slate-50 */
+
+  --accent-rgb: 236, 72, 153;          /* pink-500 */
+}
+
+/* Optional: Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-start-rgb: 15, 23, 42;   /* slate-900 */
+    --background-end-rgb: 2, 6, 23;       /* slate-950 */
+    --foreground-rgb: 248, 250, 252;     /* slate-50 */
+    --muted-foreground-rgb: 148, 163, 184;/* slate-400 */
+
+    --card-rgb: 30, 41, 59;              /* slate-800 */
+    --card-border-rgb: 51, 65, 85;       /* slate-700 */
+
+    --primary-rgb: 96, 165, 250;         /* blue-400 */
+    --primary-foreground-rgb: 15, 23, 42;/* slate-900 */
+
+    --accent-rgb: 244, 114, 182;         /* pink-400 */
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: rgb(var(--foreground-rgb));
+}
+
+a {
+  color: rgb(var(--primary-rgb));
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+@layer components {
+  /* Base styles for form inputs */
+  .form-input {
+    @apply block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm;
+  }
+  
+  .form-checkbox {
+    @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500;
+  }
+}
