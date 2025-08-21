@@ -30,7 +30,9 @@ export async function POST(req: Request) {
       case 'checkout.session.completed': {
         const s = event.data.object as StripeType.Checkout.Session
         if (s.mode === 'subscription' && s.subscription) {
-          const sub = await stripe.subscriptions.retrieve(s.subscription as string)
+          const sub = (await stripe.subscriptions.retrieve(
+            s.subscription as string
+          )) as any
 
           const { data: bc } = await supabaseAdmin
             .from('billing_customers')
@@ -56,7 +58,7 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const sub = event.data.object as StripeType.Subscription
+        const sub = event.data.object as any
         await supabaseAdmin
           .from('subscriptions')
           .update({
