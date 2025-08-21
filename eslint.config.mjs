@@ -10,6 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: ["src/webhook-server.js", "scripts/import-postal-codes.js"],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
 
