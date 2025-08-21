@@ -183,7 +183,7 @@ export default function Onboarding() {
           {saving ? 'Speichere…' : 'Entwurf speichern'}
         </button>
         <button onClick={() => save(true)} disabled={saving} className="inline-flex h-10 items-center justify-center rounded-md bg-blue-500 px-6 text-sm font-medium text-white shadow transition-colors hover:bg-blue-600 disabled:opacity-50">
-          {saving ? 'Profil veröffentlichen'}
+          {saving ? 'Wird veröffentlicht...' : 'Profil veröffentlichen'}
         </button>
       </div>
     </div>
