@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await supabaseServer();
   const { priceId } = await req.json();
 
   const { data: { user } } = await supabase.auth.getUser();

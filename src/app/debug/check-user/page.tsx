@@ -14,11 +14,13 @@ function DataView({ title, data }: { title: string; data: any }) {
   )
 }
 
-export default async function CheckUserPage({
-  searchParams,
-}: {
-  searchParams: { user_id?: string }
-}) {
+type PageProps = {
+  searchParams: {
+    user_id?: string | string[]
+  }
+}
+
+export default async function CheckUserPage({ searchParams }: PageProps) {
   // Wichtig: Wir brauchen hier einen Admin-Client, um die Daten jedes Nutzers
   // (nicht nur des eingeloggten) nachschlagen zu können.
   const supabaseAdmin = createClient(
@@ -26,7 +28,8 @@ export default async function CheckUserPage({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  let userId = searchParams.user_id
+  const userIdParam = searchParams.user_id
+  let userId = Array.isArray(userIdParam) ? userIdParam[0] : userIdParam
 
   // If no user_id is in the URL, get the currently logged-in user
   // Hinweis: Dies funktioniert nur, wenn die Seite von einem eingeloggten Nutzer aufgerufen wird.
