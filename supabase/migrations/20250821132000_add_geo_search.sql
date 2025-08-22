@@ -47,7 +47,7 @@ comment on function public.haversine_distance is 'Calculates the distance betwee
 -- Grant execution rights for the helper function as well
 grant execute on function public.haversine_distance(double precision, double precision, double precision, double precision) to anon, authenticated;
 
--- 4. Create the main RPC function for searching
+-- 4. Create the main RPC function for searching (V2 with advanced ranking)
 create or replace function public.search_midwives_by_radius(p_postal_code text, p_radius_km int)
 returns table (
   id uuid,
@@ -57,7 +57,9 @@ returns table (
   radius_km int,
   about text,
   price_model text,
-  distance double precision
+  distance double precision,
+  plan text,
+  capacity_status text
 ) as $$
 declare
   search_lat double precision;
@@ -83,9 +85,11 @@ begin
     p.city,
     p.postal_code,
     p.radius_km,
-    p.bio as about, -- Assuming 'bio' is the correct column name now
+    p.bio as about,
     p.price_model,
-    haversine_distance(search_lat, search_lon, p.latitude, p.longitude) as distance
+    haversine_distance(search_lat, search_lon, p.latitude, p.longitude) as distance,
+    p.plan,
+    public.get_midwife_capacity_status(p.id) as capacity_status
   from
     public.profiles p
   where
@@ -98,7 +102,18 @@ begin
     -- AND the user's location must be within the midwife's own service radius
     and haversine_distance(search_lat, search_lon, p.latitude, p.longitude) <= p.radius_km
   order by
-    distance;
+    -- 1. Pro-Boost: PRO users first
+    case when p.plan = 'PRO' then 0 else 1 end,
+    -- 2. Capacity: GREEN, then YELLOW, then RED
+    case 
+      when public.get_midwife_capacity_status(p.id) = 'GREEN' then 0
+      when public.get_midwife_capacity_status(p.id) = 'YELLOW' then 1
+      else 2
+    end,
+    -- 3. Distance: Closer midwives first
+    distance,
+    -- 4. Random component to shuffle similar results
+    random();
 end;
 $$ language plpgsql security definer;
 comment on function public.search_midwives_by_radius is 'Searches for midwives within a given radius of a postal code. SECURITY DEFINER allows it to bypass RLS.';

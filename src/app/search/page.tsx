@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator'
 import { Loader2, Search as SearchIcon, SlidersHorizontal } from 'lucide-react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 // Typen
 type MidwifeSearchResult = {
@@ -26,6 +27,8 @@ type MidwifeSearchResult = {
   price_model: string | null;
   status: 'VERIFIED' | 'PENDING' | 'DRAFT';
   distance: number;
+  plan: 'FREE' | 'PRO';
+  capacity_status: 'GREEN' | 'YELLOW' | 'RED';
 }
 
 export default function SearchPage() {
@@ -37,19 +40,15 @@ export default function SearchPage() {
   // Filter States
   const [postal, setPostal] = useState(searchParams.get('postal') || '')
   const [radius, setRadius] = useState(searchParams.get('radius') || '25')
-  const [services, setServices] = useState<string[]>([])
-  const [languages, setLanguages] = useState<string[]>([])
-
+  
   const performSearch = useMemo(() => async () => {
+    if (!postal) return
     setLoading(true)
     setHasSearched(true)
 
-    // HINWEIS: Die RPC-Funktion muss diese neuen Filter unterstützen
     const { data, error } = await supabase.rpc('search_midwives_by_radius', {
       p_postal_code: postal.trim(),
       p_radius_km: Number(radius),
-      // p_services: services, // Beispiel für erweiterte Parameter
-      // p_languages: languages, // Beispiel für erweiterte Parameter
     })
 
     if (error) {
@@ -59,7 +58,7 @@ export default function SearchPage() {
       setResults(data || [])
     }
     setLoading(false)
-  }, [postal, radius, services, languages])
+  }, [postal, radius])
 
   useEffect(() => {
     if (searchParams.get('postal')) {
@@ -101,27 +100,10 @@ export default function SearchPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Leistungen</Label>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2"><Checkbox id="s-hausgeburt" /> <Label htmlFor="s-hausgeburt">Hausgeburt</Label></div>
-                <div className="flex items-center gap-2"><Checkbox id="s-wochenbett" /> <Label htmlFor="s-wochenbett">Wochenbett</Label></div>
-                <div className="flex items-center gap-2"><Checkbox id="s-stillberatung" /> <Label htmlFor="s-stillberatung">Stillberatung</Label></div>
-              </div>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Sprachen</Label>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2"><Checkbox id="l-englisch" /> <Label htmlFor="l-englisch">Englisch</Label></div>
-                <div className="flex items-center gap-2"><Checkbox id="l-tuerkisch" /> <Label htmlFor="l-tuerkisch">Türkisch</Label></div>
-              </div>
-            </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                <SearchIcon className="h-4 w-4 mr-2" />
-                Suche anwenden
-              </Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              <SearchIcon className="h-4 w-4 mr-2" />
+              Suche anwenden
+            </Button>
             </form>
           </CardContent>
         </Card>
@@ -164,11 +146,26 @@ export default function SearchPage() {
                       <Image src={`https://via.placeholder.com/100x100.png/ddd/333?text=${midwife.display_name?.charAt(0)}`} alt={`Foto von ${midwife.display_name}`} layout="fill" objectFit="cover" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-bold flex items-center gap-2">
-                        {midwife.display_name}
+                      <CardTitle className="text-xl font-bold flex items-center gap-2 flex-wrap">
+                        <span>{midwife.display_name}</span>
+                        {midwife.plan === 'PRO' && <Badge className="bg-purple-100 text-purple-800">PRO</Badge>}
                         {midwife.status === 'VERIFIED' && <Badge variant="secondary" className="bg-green-100 text-green-800">✓ Verifiziert</Badge>}
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">{midwife.city} {midwife.postal_code} • ~{midwife.distance.toFixed(0)} km</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{midwife.city} {midwife.postal_code} • ~{midwife.distance.toFixed(0)} km</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className={cn(
+                            "h-2.5 w-2.5 rounded-full",
+                            midwife.capacity_status === 'GREEN' && 'bg-green-500',
+                            midwife.capacity_status === 'YELLOW' && 'bg-yellow-500',
+                            midwife.capacity_status === 'RED' && 'bg-red-500',
+                          )} />
+                          {
+                            midwife.capacity_status === 'GREEN' ? 'Verfügbar' :
+                            midwife.capacity_status === 'YELLOW' ? 'Begrenzt verfügbar' : 'Ausgebucht'
+                          }
+                        </span>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">

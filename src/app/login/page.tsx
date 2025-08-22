@@ -11,6 +11,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [signingIn, setSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault()
+    if (signingIn || !email) return
+    setError(null)
+    setSigningIn(true)
+    setMagicLinkSent(false)
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        // This URL needs to be added to your Supabase config under "Redirect URLs"
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    setSigningIn(false)
+
+    if (error) {
+      console.error('Magic link error:', error)
+      setError('Magic Link konnte nicht gesendet werden. Bitte versuche es erneut.')
+    } else {
+      setMagicLinkSent(true)
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -102,6 +128,47 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Oder</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <form onSubmit={handleMagicLink}>
+                <p className="text-sm text-center mb-2">
+                  Kein Passwort? Erhalte einen Magic Link per E-Mail.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    id="email-magic"
+                    name="email-magic"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="E-Mail-Adresse"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full rounded-md border p-2"
+                  />
+                  <button
+                    type="submit"
+                    disabled={signingIn || !email}
+                    className="rounded-md bg-gray-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    Senden
+                  </button>
+                </div>
+                {magicLinkSent && <p className="text-sm text-green-600 mt-2">Magic Link gesendet! Bitte überprüfe dein Postfach.</p>}
+              </form>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -16,8 +16,12 @@ type Profile = {
 type BookingRow = {
   id: string
   status: Status
-  midwife_id: string
   created_at: string
+  midwife_id: string
+  client_id: string
+  is_boosted: boolean
+  midwife: { display_name: string | null } | null
+  client: { display_name: string | null } | null
 }
 
 const TABLE_NAME = 'bookings'
@@ -85,15 +89,23 @@ export default function Dashboard() {
 
         const query = supabase
           .from(TABLE_NAME)
-          .select('id,status,midwife_id,created_at')
-          .order('created_at', { ascending: false }) as any
+          .select('id, status, created_at, midwife_id, client_id, is_boosted, midwife:midwife_id(display_name), client:client_id(display_name)')
+          .order('created_at', { ascending: false })
 
         if (me.role === 'MIDWIFE') query.eq('midwife_id', me.id)
         else if (me.role === 'CLIENT') query.eq('client_id', me.id)
 
-        const { data: bookings, error: be } = await query
+        const { data: bookings, error: be } = await query as { data: any[], error: any }
         if (be) throw be
-        setRows(bookings ?? [])
+        
+        // Transformiere die Daten, um das Array-Problem zu lösen
+        const transformedBookings = bookings.map(b => ({
+          ...b,
+          midwife: Array.isArray(b.midwife) ? b.midwife[0] : b.midwife,
+          client: Array.isArray(b.client) ? b.client[0] : b.client,
+        }))
+        
+        setRows(transformedBookings ?? [])
       } catch (e: any) {
         setError(e?.message ?? 'Unbekannter Fehler')
       } finally {
@@ -111,8 +123,7 @@ export default function Dashboard() {
         setRows(prev => {
           const newRow = payload.new as BookingRow
           if (profile.role === 'MIDWIFE' && newRow.midwife_id !== profile.id) return prev
-          // @ts-ignore client_id nicht im Typ geführt
-          if (profile.role === 'CLIENT' && payload.new.client_id !== profile.id) return prev
+          if (profile.role === 'CLIENT' && newRow.client_id !== profile.id) return prev
 
           const idx = prev.findIndex(r => r.id === newRow.id)
           if (idx === -1) return [newRow, ...prev].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
@@ -148,22 +159,29 @@ export default function Dashboard() {
           <table className="min-w-full text-sm">
             <thead className="bg-neutral-900/60 text-neutral-300">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">ID</th>
+                <th className="px-4 py-3 text-left font-medium">{profile.role === 'CLIENT' ? 'Hebamme' : 'Klientin'}</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
+                <th className="px-4 py-3 text-left font-medium">Anfragedatum</th>
                 {profile.role === 'MIDWIFE' && <th className="px-4 py-3 text-left font-medium">Aktion</th>}
-                <th className="px-4 py-3 text-left font-medium">Telefon</th>
+                <th className="px-4 py-3 text-left font-medium">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800">
               {rows.map((r) => (
                 <tr key={r.id} className="hover:bg-neutral-900/40">
-                  <td className="px-4 py-3 font-mono text-xs">
-                    <button onClick={() => setSelectedId(r.id)} className="underline decoration-dotted">
-                      {r.id}
-                    </button>
+                  <td className="px-4 py-3 font-medium">
+                    {profile.role === 'CLIENT' ? r.midwife?.display_name : r.client?.display_name}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge status={r.status} role={profile.role} />
+                    <div className="flex items-center gap-2">
+                      <Badge status={r.status} role={profile.role} />
+                      {profile.role === 'CLIENT' && r.is_boosted && (
+                        <span title="Diese PRO-Anfrage wartet seit über 24 Stunden auf eine Antwort." className="text-base">🔥</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-neutral-400">
+                    {new Date(r.created_at).toLocaleDateString()}
                   </td>
 
                   {profile.role === 'MIDWIFE' && (
@@ -175,15 +193,15 @@ export default function Dashboard() {
                   )}
 
                   <td className="px-4 py-3">
-                    {r.status === 'PAID'
-                      ? <span className="text-emerald-400">Sichtbar nach Zahlung (im Detail einsehbar)</span>
-                      : <span className="text-red-400">Kontakt erst nach Zahlung sichtbar.</span>}
+                    <button onClick={() => setSelectedId(r.id)} className="text-sm underline decoration-dotted">
+                      Ansehen
+                    </button>
                   </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={profile?.role === 'MIDWIFE' ? 4 : 3} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={profile?.role === 'MIDWIFE' ? 5 : 4} className="px-4 py-6 text-center text-neutral-400">
                     Keine Anfragen vorhanden.
                   </td>
                 </tr>

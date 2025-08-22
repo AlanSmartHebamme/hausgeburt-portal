@@ -37,7 +37,50 @@ app.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (re
         const isActive = ['trialing', 'active'].includes(subscription.status);
         plan = isActive ? 'PRO' : 'FREE';
         break;
+
+      case 'invoice.payment_failed':
+        subscription = event.data.object;
+        // The subscription object on payment_failed is sometimes nested differently
+        const customerId = subscription.customer;
+        // We need to get the subscription to find the user ID
+        const customerSubscriptions = await stripe.subscriptions.list({ customer: customerId, limit: 1 });
+        if (customerSubscriptions.data.length > 0) {
+          userId = customerSubscriptions.data[0].metadata?.supabase_user_id;
+        }
+        // On payment failure, we downgrade the user to the FREE plan.
+        plan = 'FREE';
+        break;
       
+      case 'checkout.session.completed':
+        const session = event.data.object;
+        if (session.metadata?.feature === 'express_booking') {
+          const clientId = session.metadata.client_id;
+          const midwifeIds = session.metadata.midwife_ids.split(',');
+
+          if (!clientId || midwifeIds.length === 0) {
+            throw new Error('Missing metadata for express booking.');
+          }
+
+          // Create a Supabase admin client to insert bookings
+          const { createClient } = require('@supabase/supabase-js');
+          const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+          const newBookings = midwifeIds.map(midwifeId => ({
+            client_id: clientId,
+            midwife_id: midwifeId,
+            status: 'REQUESTED',
+            // You might want to add a note that this was an express booking
+          }));
+
+          const { error } = await supabaseAdmin.from('bookings').insert(newBookings);
+          if (error) {
+            throw new Error(`Failed to insert express bookings: ${error.message}`);
+          }
+          console.log(`Successfully created ${newBookings.length} express bookings for user ${clientId}.`);
+        }
+        // Acknowledge event, but no plan update needed for one-time payments
+        return res.status(200).json({ received: true });
+
       // We don't need to handle checkout.session.completed for subscriptions here,
       // as customer.subscription.created/updated will fire and are more reliable.
       

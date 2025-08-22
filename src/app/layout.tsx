@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,6 +36,13 @@ export default function RootLayout({
         </main>
         <Footer />
         <Toaster />
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && process.env.NEXT_PUBLIC_UMAMI_SRC && (
+          <Script 
+            src={process.env.NEXT_PUBLIC_UMAMI_SRC}
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            strategy="lazyOnload"
+          />
+        )}
       </body>
     </html>
   );
