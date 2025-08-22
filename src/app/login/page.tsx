@@ -40,10 +40,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">
           Anmelden
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <p className="mt-2 text-center text-sm">
           Oder{' '}
           <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
             erstelle einen neuen Account
@@ -52,10 +52,10 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border">
           <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="email" className="block text-sm font-medium">
                 E-Mail-Adresse
               </label>
               <div className="mt-1">
@@ -67,13 +67,13 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border p-2"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="password" className="block text-sm font-medium">
                 Passwort
               </label>
               <div className="mt-1">
@@ -85,7 +85,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border p-2"
                 />
               </div>
             </div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={signingIn}
-                className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
               >
                 {signingIn ? 'Wird eingeloggt…' : 'Anmelden'}
               </button>

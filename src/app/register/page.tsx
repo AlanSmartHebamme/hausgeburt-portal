@@ -17,12 +17,10 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
 
-    // 1) User anlegen
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
       options: {
-        // data to be stored in auth.users.user_metadata
         data: {
           display_name: displayName,
         }
@@ -34,37 +32,30 @@ export default function RegisterPage() {
       return
     }
 
-    // 2) Profil speichern (Policies erlauben Insert für eigenen User)
     const { error: pErr } = await supabase.from('profiles').insert({
       id: data.user.id, role, display_name: displayName
     })
     if (pErr) {
       setError(pErr.message);
       setLoading(false);
-      // Optional: delete the user if profile creation fails
-      // await supabase.auth.api.deleteUser(data.user.id)
       return
     }
 
     setSuccess(true)
     setLoading(false)
-    // Redirect after a delay
-    setTimeout(() => {
-      window.location.href = '/login'
-    }, 3000)
   }
 
   if (success) {
     return (
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-2xl font-bold tracking-tight">
           Registrierung erfolgreich!
         </h2>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2">
           Bitte überprüfe dein E-Mail-Postfach, um deine Registrierung zu bestätigen.
         </p>
-        <p className="mt-4 text-sm text-slate-500">
-          Du wirst in Kürze zum Login weitergeleitet...
+        <p className="mt-4 text-sm">
+          <Link href="/login" className="text-blue-600 hover:underline">Weiter zum Login</Link>
         </p>
       </div>
     )
@@ -73,10 +64,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">
           Neuen Account erstellen
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <p className="mt-2 text-center text-sm">
           Oder{' '}
           <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
             melde dich bei deinem Account an
@@ -85,14 +76,14 @@ export default function RegisterPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border">
           <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Ich bin...</label>
+              <label className="block text-sm font-medium">Ich bin...</label>
               <select 
                 value={role} 
                 onChange={e => setRole(e.target.value as any)}
-                className="mt-1 block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border p-2"
               >
                 <option value="CLIENT">... auf der Suche nach einer Hebamme</option>
                 <option value="MIDWIFE">... eine Hebamme</option>
@@ -100,7 +91,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="displayName" className="block text-sm font-medium">
                 Anzeigename
               </label>
               <input
@@ -109,12 +100,12 @@ export default function RegisterPage() {
                 required
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
-                className="mt-1 block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border p-2"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="email" className="block text-sm font-medium">
                 E-Mail-Adresse
               </label>
               <input
@@ -124,12 +115,12 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border p-2"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="password" className="block text-sm font-medium">
                 Passwort
               </label>
               <input
@@ -139,7 +130,7 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border p-2"
               />
             </div>
             
@@ -149,7 +140,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Wird erstellt…' : 'Account erstellen'}
               </button>
